@@ -16,12 +16,71 @@ const isProdDb = !!dbUrl;
 
 let pgClient: any;
 let prodDbInstance: any;
+let schemaEnsured = false;
+
+async function ensureSchema(client: any) {
+  if (schemaEnsured) return;
+  try {
+    console.log('🚀 [DATABASE] Ensuring database tables exist...');
+    
+    // Try to create uuid-ossp extension
+    try {
+      await client`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+    } catch (e) {
+      console.log('ℹ️ [DATABASE] Skip uuid-ossp extension check (non-superuser or already present).');
+    }
+
+    // Create raffles table (commit_timestamp must be BIGINT to hold 13-digit millisecond timestamps)
+    await client`
+      CREATE TABLE IF NOT EXISTS raffles (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT NOT NULL,
+        description TEXT,
+        prize_description TEXT,
+        winner_count INTEGER NOT NULL,
+        total_entries INTEGER NOT NULL,
+        merkle_root TEXT NOT NULL,
+        commit_timestamp BIGINT NOT NULL,
+        drawn BOOLEAN DEFAULT FALSE NOT NULL,
+        seed TEXT,
+        draw_algorithm TEXT DEFAULT 'cTRNG-keccak256-v1' NOT NULL,
+        cosmic_proof JSONB,
+        raw_entries TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `;
+
+    // Create raffle_winners table
+    await client`
+      CREATE TABLE IF NOT EXISTS raffle_winners (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        raffle_id UUID NOT NULL REFERENCES raffles(id) ON DELETE CASCADE,
+        index INTEGER NOT NULL,
+        username TEXT NOT NULL,
+        merkle_proof JSONB NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+      )
+    `;
+
+    // Create index
+    await client`
+      CREATE INDEX IF NOT EXISTS raffle_winners_raffle_id_idx ON raffle_winners(raffle_id)
+    `;
+    
+    console.log('✅ [DATABASE] Database tables verified & ready.');
+    schemaEnsured = true;
+  } catch (err) {
+    console.error('❌ [DATABASE] Failed to ensure schema:', err);
+  }
+}
 
 if (isProdDb) {
   console.log('🔌 [DATABASE] Production database connection string detected. Connecting to PostgreSQL...');
   try {
-    pgClient = postgres(dbUrl, { ssl: 'require', max: 1 });
+    pgClient = postgres(dbUrl, { ssl: 'require', max: 10 });
     prodDbInstance = drizzle(pgClient, { schema });
+    // Trigger schema creation asynchronously on startup
+    ensureSchema(pgClient);
   } catch (err) {
     console.error('❌ Failed to initialize PostgreSQL client:', err);
   }
