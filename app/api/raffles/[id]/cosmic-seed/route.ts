@@ -3,6 +3,7 @@ import { db } from '@/lib/db/client'
 import { raffles } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { fetchCosmicSeed, getCosmicProof } from '@/lib/cosmic-raffle/fetchCosmicSeed'
+import { withDbRetry } from '@/lib/db/retry'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,11 +18,12 @@ export async function GET(
   try {
     const { id } = await params
 
-    const [raffle] = await db
+    const [raffle] = await withDbRetry(() => db
       .select()
       .from(raffles)
       .where(eq(raffles.id, id))
       .limit(1)
+    )
 
     if (!raffle) {
       return NextResponse.json({ error: 'Raffle not found.' }, { status: 404 })

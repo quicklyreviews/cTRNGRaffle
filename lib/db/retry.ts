@@ -22,10 +22,14 @@ function isTransient(e: unknown): boolean {
   )
 }
 
+import { getSchemaPromise } from './client'
+
 export async function withDbRetry<T>(
   fn: () => Promise<T>,
   opts: { attempts?: number; label?: string } = {},
 ): Promise<T> {
+  // Await runtime self-healing database schema verification
+  await getSchemaPromise()
   const attempts = opts.attempts ?? 5
   let lastErr: unknown
   for (let i = 0; i < attempts; i++) {

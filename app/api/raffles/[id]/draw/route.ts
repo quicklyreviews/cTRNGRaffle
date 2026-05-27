@@ -6,6 +6,7 @@ import { fetchCosmicSeed, getCosmicProof } from '@/lib/cosmic-raffle/fetchCosmic
 import { parseEntries } from '@/lib/cosmic-raffle/parseEntries'
 import { drawWinnersOffChain } from '@/lib/cosmic-raffle/draw'
 import { getCurrentUser } from '@/lib/auth/session'
+import { withDbRetry } from '@/lib/db/retry'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,11 +22,12 @@ export async function POST(
     const { id } = await params
 
     // 2. Fetch raffle details
-    const [raffle] = await db
+    const [raffle] = await withDbRetry(() => db
       .select()
       .from(raffles)
       .where(eq(raffles.id, id))
       .limit(1)
+    )
 
     if (!raffle) {
       return NextResponse.json({ error: 'Raffle not found.' }, { status: 404 })
@@ -68,11 +70,11 @@ export async function POST(
     }))
 
     console.log(`💾 Caching ${winnersToInsert.length} winners in database...`)
-    await db.insert(raffleWinners).values(winnersToInsert)
+    await withDbRetry(() => db.insert(raffleWinners).values(winnersToInsert))
 
     // 7. Update raffle state in DB
     const cosmicProof = getCosmicProof(raffle.id) ?? null
-    const [updatedRaffle] = await db
+    const [updatedRaffle] = await withDbRetry(() => db
       .update(raffles)
       .set({
         drawn: true,
@@ -81,6 +83,7 @@ export async function POST(
       })
       .where(eq(raffles.id, raffle.id))
       .returning()
+    )
 
     return NextResponse.json({
       success: true,

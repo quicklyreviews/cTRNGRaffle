@@ -17,11 +17,19 @@ const isProdDb = !!dbUrl;
 let pgClient: any;
 let prodDbInstance: any;
 let schemaEnsured = false;
+let schemaPromise: Promise<void> | null = null;
 
 async function ensureSchema(client: any) {
   if (schemaEnsured) return;
   try {
     console.log('🚀 [DATABASE] Ensuring database tables exist...');
+    
+    // Try to create pgcrypto extension (required for gen_random_uuid() on some PostgreSQL versions)
+    try {
+      await client`CREATE EXTENSION IF NOT EXISTS pgcrypto`;
+    } catch (e) {
+      console.log('ℹ️ [DATABASE] Skip pgcrypto extension check (non-superuser or already present).');
+    }
     
     // Try to create uuid-ossp extension
     try {
@@ -74,13 +82,20 @@ async function ensureSchema(client: any) {
   }
 }
 
+export function getSchemaPromise(): Promise<void> {
+  if (!isProdDb) return Promise.resolve();
+  if (schemaPromise) return schemaPromise;
+  schemaPromise = ensureSchema(pgClient);
+  return schemaPromise;
+}
+
 if (isProdDb) {
   console.log('🔌 [DATABASE] Production database connection string detected. Connecting to PostgreSQL...');
   try {
     pgClient = postgres(dbUrl, { ssl: 'require', max: 10 });
     prodDbInstance = drizzle(pgClient, { schema });
     // Trigger schema creation asynchronously on startup
-    ensureSchema(pgClient);
+    getSchemaPromise();
   } catch (err) {
     console.error('❌ Failed to initialize PostgreSQL client:', err);
   }
