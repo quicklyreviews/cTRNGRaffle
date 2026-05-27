@@ -229,11 +229,20 @@ export default function RaffleLandingPage() {
 
           {/* Campaigns Registry Section */}
           <section className="space-y-6">
-            <div className="flex items-center justify-between pb-3.5 border-b border-white/5">
-              <h2 className="text-base font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2.5 font-mono">
-                <Orbit className="h-4.5 w-4.5 text-solar-amber animate-spin" style={{ animationDuration: '20s' }} />
-                Active Campaigns Telemetry Registry
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3.5 border-b border-white/5">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-base font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2.5 font-mono">
+                  <Orbit className="h-4.5 w-4.5 text-solar-amber animate-spin" style={{ animationDuration: '20s' }} />
+                  Active Campaigns Telemetry Registry
+                </h2>
+                
+                <Link href="/create">
+                  <Button className="bg-gradient-to-r from-solar-amber/20 to-hyper-indigo/20 hover:from-solar-amber/35 hover:to-hyper-indigo/35 text-solar-amber border border-solar-amber/30 hover:border-solar-amber/50 font-bold uppercase tracking-wider text-[11px] px-3 py-1 h-auto rounded-xl flex items-center gap-1 transition-all shadow-[0_0_15px_rgba(245,158,11,0.05)] cursor-pointer">
+                    <Plus className="h-3 w-3 stroke-[2.5px]" />
+                    Create Raffle
+                  </Button>
+                </Link>
+              </div>
               
               <div className="flex items-center gap-3.5 font-mono text-xs text-slate-500">
                 <span>CHANNELS: 5 ONLINE</span>
@@ -243,18 +252,18 @@ export default function RaffleLandingPage() {
 
             {loading ? (
               /* Shimmer Loading Skeleton Cards! */
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[1, 2].map((item) => (
-                  <div key={item} className="glass-card h-56 p-5 flex flex-col justify-between overflow-hidden border border-white/5 rounded-2xl relative">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="glass-card h-48 p-4 flex flex-col justify-between overflow-hidden border border-white/5 rounded-2xl relative">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div className="h-3 w-20 rounded shimmer-skeleton" />
                         <div className="h-5 w-12 rounded-lg shimmer-skeleton" />
                       </div>
                       <div className="h-5 w-44 rounded shimmer-skeleton" />
-                      <div className="h-8 w-full rounded shimmer-skeleton" />
+                      <div className="h-6 w-full rounded shimmer-skeleton" />
                     </div>
-                    <div className="flex justify-between items-center pt-4 border-t border-white/5">
+                    <div className="flex justify-between items-center pt-3 border-t border-white/5">
                       <div className="flex gap-4">
                         <div className="h-3.5 w-14 rounded shimmer-skeleton" />
                         <div className="h-3.5 w-14 rounded shimmer-skeleton" />
@@ -286,12 +295,12 @@ export default function RaffleLandingPage() {
                 </div>
                 <Link href="/create">
                   <Button className="bg-slate-900 hover:bg-slate-800 text-solar-amber font-bold text-xs uppercase tracking-widest py-3 px-5 border border-white/5 rounded-xl transition-all duration-300">
-                    Launch Setup Wizard
+                    Create New Raffle
                   </Button>
                 </Link>
               </motion.div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 select-text">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 select-text">
                 {raffles.map((raffle, i) => (
                   <motion.div
                     key={raffle.id}
