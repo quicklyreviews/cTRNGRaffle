@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, boolean, jsonb, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, boolean, jsonb, timestamp, index, bigint } from 'drizzle-orm/pg-core';
 
 export const raffles = pgTable('raffles', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -8,7 +8,7 @@ export const raffles = pgTable('raffles', {
   winnerCount: integer('winner_count').notNull(),
   totalEntries: integer('total_entries').notNull(),
   merkleRoot: text('merkle_root').notNull(),
-  commitTimestamp: integer('commit_timestamp').notNull(), // Unix epoch timestamp
+  commitTimestamp: bigint('commit_timestamp', { mode: 'number' }).notNull(), // Unix epoch timestamp (ms)
   drawn: boolean('drawn').default(false).notNull(),
   seed: text('seed'),
   drawAlgorithm: text('draw_algorithm').default('cTRNG-keccak256-v1').notNull(),

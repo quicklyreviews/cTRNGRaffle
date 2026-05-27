@@ -11,35 +11,33 @@ const dummyClient = {} as any
 const originalDb = drizzle(dummyClient, { schema })
 
 // Detect production database connection URL
-const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
-const isProdDb = !!dbUrl;
+// Priority: POSTGRES_URL_NON_POOLING > POSTGRES_URL > DATABASE_URL
+// For Vercel Postgres (Neon), POSTGRES_URL is pooled (pgbouncer) — DDL won't work through it.
+// POSTGRES_URL_NON_POOLING is the direct connection needed for CREATE TABLE etc.
+const dbUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+// Only treat as production DB if the URL points to a real remote host (not localhost)
+const isLocalhost = dbUrl ? /localhost|127\.0\.0\.1|::1/.test(dbUrl) : true;
+const isProdDb = !!dbUrl && !isLocalhost;
+
+// Separate URL for DDL operations (schema creation) — must be non-pooling
+const ddlUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 let pgClient: any;
+let ddlClient: any;
 let prodDbInstance: any;
 let schemaEnsured = false;
 let schemaPromise: Promise<void> | null = null;
 
-async function ensureSchema(client: any) {
+async function ensureSchema() {
   if (schemaEnsured) return;
+  if (!ddlClient) return;
+  
   try {
     console.log('🚀 [DATABASE] Ensuring database tables exist...');
-    
-    // Try to create pgcrypto extension (required for gen_random_uuid() on some PostgreSQL versions)
-    try {
-      await client`CREATE EXTENSION IF NOT EXISTS pgcrypto`;
-    } catch (e) {
-      console.log('ℹ️ [DATABASE] Skip pgcrypto extension check (non-superuser or already present).');
-    }
-    
-    // Try to create uuid-ossp extension
-    try {
-      await client`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-    } catch (e) {
-      console.log('ℹ️ [DATABASE] Skip uuid-ossp extension check (non-superuser or already present).');
-    }
 
-    // Create raffles table (commit_timestamp must be BIGINT to hold 13-digit millisecond timestamps)
-    await client`
+    // Create raffles table (commit_timestamp must be BIGINT to hold 13-digit ms timestamps)
+    await ddlClient`
       CREATE TABLE IF NOT EXISTS raffles (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         title TEXT NOT NULL,
@@ -59,7 +57,7 @@ async function ensureSchema(client: any) {
     `;
 
     // Create raffle_winners table
-    await client`
+    await ddlClient`
       CREATE TABLE IF NOT EXISTS raffle_winners (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         raffle_id UUID NOT NULL REFERENCES raffles(id) ON DELETE CASCADE,
@@ -71,7 +69,7 @@ async function ensureSchema(client: any) {
     `;
 
     // Create index
-    await client`
+    await ddlClient`
       CREATE INDEX IF NOT EXISTS raffle_winners_raffle_id_idx ON raffle_winners(raffle_id)
     `;
     
@@ -79,26 +77,40 @@ async function ensureSchema(client: any) {
     schemaEnsured = true;
   } catch (err) {
     console.error('❌ [DATABASE] Failed to ensure schema:', err);
+    // Reset schemaPromise so it will be retried on the next request
+    schemaPromise = null;
+    throw err;
   }
 }
 
 export function getSchemaPromise(): Promise<void> {
   if (!isProdDb) return Promise.resolve();
+  if (schemaEnsured) return Promise.resolve();
   if (schemaPromise) return schemaPromise;
-  schemaPromise = ensureSchema(pgClient);
+  schemaPromise = ensureSchema().catch(() => {
+    // Silently catch so await doesn't throw, but schemaPromise is already reset inside ensureSchema
+  });
   return schemaPromise;
 }
 
 if (isProdDb) {
-  console.log('🔌 [DATABASE] Production database connection string detected. Connecting to PostgreSQL...');
+  console.log('🔌 [DATABASE] Production PostgreSQL detected. Connecting...');
+  console.log(`🔌 [DATABASE] Using query URL: ${dbUrl!.replace(/:[^:@]+@/, ':***@')}`);
+  if (ddlUrl && ddlUrl !== dbUrl) {
+    console.log(`🔌 [DATABASE] Using DDL URL: ${ddlUrl.replace(/:[^:@]+@/, ':***@')}`);
+  }
   try {
-    pgClient = postgres(dbUrl, { ssl: 'require', max: 10 });
+    pgClient = postgres(dbUrl!, { ssl: 'require', max: 10 });
     prodDbInstance = drizzle(pgClient, { schema });
+    // Create a separate client for DDL if we have a non-pooling URL
+    ddlClient = ddlUrl ? postgres(ddlUrl, { ssl: 'require', max: 1 }) : pgClient;
     // Trigger schema creation asynchronously on startup
     getSchemaPromise();
   } catch (err) {
     console.error('❌ Failed to initialize PostgreSQL client:', err);
   }
+} else if (dbUrl) {
+  console.log('ℹ️ [DATABASE] Local database URL detected — using JSON file mock for development.');
 }
 
 // Path to the local JSON file database
