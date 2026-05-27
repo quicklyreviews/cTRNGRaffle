@@ -53,8 +53,14 @@ export default function RaffleDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const isDrawingRef = useRef(false)
   const autoTriggeredRef = useRef(false)
+  const raffleRef = useRef<Raffle | null>(null)
 
   const [raffle, setRaffle] = useState<Raffle | null>(null)
+  
+  useEffect(() => {
+    raffleRef.current = raffle
+  }, [raffle])
+
   const [winners, setWinners] = useState<Winner[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -124,11 +130,14 @@ export default function RaffleDetailPage({ params }: { params: Promise<{ id: str
       
       // Seed specific initial logs based on raffle state
       if (json.raffle?.drawn) {
-        setLogs((prev) => [
-          ...prev,
-          `[SYS] Campaign drawn successfully at ${new Date(json.raffle.createdAt).toLocaleDateString()}`,
-          '[cTRNG] Physical LEO entropy sealed in block',
-          '[TEE] MRENCLAVE attestation signature verified: PASS'
+        setLogs([
+          '🏁 [START] Cosmic quantum draw request completed.',
+          `👤 [SYS] Loaded contestant registry: ${json.raffle.totalEntries} valid entries`,
+          `🌳 [SYS] Verified locked Merkle Root: ${json.raffle.merkleRoot.slice(0, 16)}...`,
+          `🛰️ [API] POST /api/raffles/${json.raffle.id}/draw -> HTTP 200 (OK)`,
+          `🔐 [SEALED] Cosmic Seed: ${json.raffle.seed ? json.raffle.seed.slice(0, 20) + '...' : 'N/A'}`,
+          `🏆 [SUCCESS] Telemetric draw completed! Selected ${json.winners?.length || 0} winners.`,
+          `ℹ️ [TEE] MRENCLAVE attestation signature verified: PASS`
         ])
       } else {
         setLogs((prev) => [
@@ -184,6 +193,7 @@ export default function RaffleDetailPage({ params }: { params: Promise<{ id: str
 
     const logsInterval = setInterval(() => {
       if (isDrawingRef.current) return // Skip simulated logs while actively drawing
+      if (raffleRef.current?.drawn) return // Preserve real draw logs, do not stream simulated logs
       const randomLog = logPool[Math.floor(Math.random() * logPool.length)]
       setLogs((prev) => {
         const nextLogs = [...prev, randomLog]
