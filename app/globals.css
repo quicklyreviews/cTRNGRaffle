@@ -1,0 +1,273 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-space), var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+  --color-space-950: #020308;
+  --color-space-900: #050816;
+  --color-space-800: #0a0d24;
+  --color-cosmic-cyan: hsl(42, 95%, 53%); /* Golden Yellow */
+  --color-hyper-indigo: hsl(30, 90%, 55%); /* Hổ Phách Amber */
+  --color-solar-amber: hsl(45, 95%, 55%); /* Vàng sáng */
+  --color-nebula-green: hsl(145, 80%, 45%); /* Xanh lá attest */
+
+  /* Global scale-up of all font utility classes by exactly 1-2 levels */
+  --text-xs: 14px;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 16px;
+  --text-sm--line-height: 1.5rem;
+  --text-base: 18px;
+  --text-base--line-height: 1.75rem;
+  --text-lg: 20px;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 24px;
+  --text-xl--line-height: 2rem;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 2.25rem;
+  --text-3xl: 32px;
+  --text-3xl--line-height: 2.5rem;
+  --text-4xl: 40px;
+  --text-4xl--line-height: 2.75rem;
+}
+
+html, body {
+  font-size: 16px;
+  background-color: var(--color-space-950);
+  color: #f8fafc;
+  font-family: var(--font-sans);
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.35) var(--color-space-950);
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-space-950);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.25);
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-space-950);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+/* Cybernetic Widescreen Grid Background */
+.cyber-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(245, 158, 11, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.012) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: -5;
+}
+
+/* Translucent Glassmorphism Panels */
+.glass-panel {
+  background: rgba(4, 6, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(6, 9, 24, 0.9) 0%, rgba(2, 3, 10, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.7), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 
+    0 24px 56px rgba(0, 0, 0, 0.85), 
+    0 0 24px rgba(245, 158, 11, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Glassmorphic Cyber Form Inputs */
+.glass-input {
+  background: rgba(1, 2, 7, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: #f8fafc;
+  font-family: var(--font-sans);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-input::placeholder {
+  color: rgba(148, 163, 184, 0.65) !important;
+  font-weight: 500;
+}
+.glass-input:focus {
+  outline: none;
+  background: rgba(3, 5, 14, 0.98);
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 
+    0 0 16px rgba(245, 158, 11, 0.22),
+    inset 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+/* Glowing text utilities */
+.glow-text-cyan {
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+}
+.glow-text-amber {
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+}
+.glow-text-emerald {
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.45);
+}
+
+/* Shimmer Loading Skeleton */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.01) 25%,
+    rgba(255, 255, 255, 0.04) 37%,
+    rgba(255, 255, 255, 0.01) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s infinite linear;
+}
+
+/* Nebula Drift Background */
+@keyframes nebula-drift {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.nebula-bg {
+  position: fixed;
+  inset: -50%;
+  z-index: -20;
+  background-image: 
+    radial-gradient(circle at 30% 30%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 70% 20%, rgba(139, 92, 246, 0.02) 0%, transparent 40%),
+    radial-gradient(circle at 20% 60%, rgba(236, 72, 153, 0.01) 0%, transparent 35%);
+  animation: nebula-drift 120s linear infinite;
+  pointer-events: none;
+}
+
+/* HUD Vertical Frame Guide Rails */
+.hud-rail-left {
+  position: fixed;
+  left: 12px;
+  top: 60px;
+  bottom: 20px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(245, 158, 11, 0.12) 15%, rgba(245, 158, 11, 0.12) 85%, transparent);
+  pointer-events: none;
+  z-index: 30;
+}
+.hud-rail-right {
+  position: fixed;
+  right: 12px;
+  top: 60px;
+  bottom: 20px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(245, 158, 11, 0.12) 15%, rgba(245, 158, 11, 0.12) 85%, transparent);
+  pointer-events: none;
+  z-index: 30;
+}
+
+/* Dynamic CRT Scanlines Overlay */
+.scan-line-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.scan-line-overlay::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(245, 158, 11, 0.04), rgba(245, 158, 11, 0.02), rgba(0, 0, 0, 0.04));
+  z-index: 2;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Scanner Sweeper Laser */
+@keyframes scanner-swipe {
+  0% { top: -5%; opacity: 0; }
+  5% { opacity: 0.8; }
+  95% { opacity: 0.8; }
+  100% { top: 105%; opacity: 0; }
+}
+.cyber-scanner-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ffb300, transparent);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 0 3px rgba(245, 158, 11, 0.3);
+  animation: scanner-swipe 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+/* Wave sweep animation for SVG graphs */
+@keyframes wave-sweep {
+  0% { stroke-dashoffset: 600; }
+  100% { stroke-dashoffset: 0; }
+}
+.animate-wave-sweep {
+  stroke-dasharray: 600;
+  animation: wave-sweep 25s linear infinite;
+}
+
+/* Universe Maker Inspired Spherical orbits */
+.universe-orbit-path {
+  position: absolute;
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  border-radius: 50%;
+  box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.02), 0 0 8px rgba(245, 158, 11, 0.02);
+  transition: all 0.5s ease;
+}
+.universe-orbit-path:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: inset 0 0 25px rgba(245, 158, 11, 0.05), 0 0 15px rgba(245, 158, 11, 0.05);
+}
+
+/* Float animations */
+@keyframes float-breathing {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+.animate-float {
+  animation: float-breathing 8s ease-in-out infinite;
+}
+
+/* Fade In sequences */
+.animate-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
