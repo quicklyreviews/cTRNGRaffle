@@ -2,12 +2,30 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 import crypto from 'crypto'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
 import { raffles as rafflesTable, raffleWinners as raffleWinnersTable } from './schema'
 import * as schema from './schema'
 
 // Instantiate a dummy drizzle client purely to extract its perfect TypeScript typings
 const dummyClient = {} as any
 const originalDb = drizzle(dummyClient, { schema })
+
+// Detect production database connection URL
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+const isProdDb = !!dbUrl;
+
+let pgClient: any;
+let prodDbInstance: any;
+
+if (isProdDb) {
+  console.log('🔌 [DATABASE] Production database connection string detected. Connecting to PostgreSQL...');
+  try {
+    pgClient = postgres(dbUrl, { ssl: 'require', max: 1 });
+    prodDbInstance = drizzle(pgClient, { schema });
+  } catch (err) {
+    console.error('❌ Failed to initialize PostgreSQL client:', err);
+  }
+}
 
 // Path to the local JSON file database
 const DB_FILE = join(process.cwd(), 'lib', 'db', 'db.json')
@@ -310,5 +328,5 @@ const mockDb = {
   }
 }
 
-export const db = mockDb as unknown as typeof originalDb
+export const db = (isProdDb && prodDbInstance ? prodDbInstance : mockDb) as unknown as typeof originalDb
 export type DB = typeof db
